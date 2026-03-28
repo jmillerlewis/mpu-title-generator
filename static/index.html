@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MPU YouTube Title Generator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red: #C8102E;
+    --red-dark: #8B0B1F;
+    --red-light: #F5E6E9;
+    --ink: #1A1A1A;
+    --ink-mid: #444;
+    --ink-light: #777;
+    --rule: #E0E0E0;
+    --bg: #FAFAF8;
+    --card-bg: #FFFFFF;
+    --chat-bg: #F3F3F0;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  header {
+    border-bottom: 3px solid var(--ink);
+    padding: 2rem 2.5rem 1.5rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .masthead-eyebrow {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 2px;
+  }
+
+  .masthead-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+
+  .masthead-sub {
+    font-size: 12px;
+    color: var(--ink-light);
+    margin-top: 3px;
+  }
+
+  .header-badge {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid var(--rule);
+    padding: 6px 12px;
+    color: var(--ink-light);
+    white-space: nowrap;
+  }
+
+  /* Layout: two-column once results exist */
+  .app-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-height: calc(100vh - 100px);
+    transition: grid-template-columns 0.3s ease;
+  }
+
+  .app-layout.has-results {
+    grid-template-columns: 1fr 380px;
+  }
+
+  .main-col {
+    max-width: 860px;
+    width: 100%;
+    padding: 2.5rem 2.5rem 4rem;
+  }
+
+  .app-layout.has-results .main-col {
+    max-width: 100%;
+    border-right: 1px solid var(--rule);
+  }
+
+  /* Chat column */
+  .chat-col {
+    display: none;
+    flex-direction: column;
+    height: calc(100vh - 100px);
+    position: sticky;
+    top: 0;
+  }
+
+  .app-layout.has-results .chat-col {
+    display: flex;
+  }
+
+  .chat-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--rule);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    background: var(--card-bg);
+    flex-shrink: 0;
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--chat-bg);
+  }
+
+  .chat-msg {
+    max-width: 92%;
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 10px 14px;
+  }
+
+  .chat-msg.user {
+    align-self: flex-end;
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .chat-msg.assistant {
+    align-self: flex-start;
+    background: var(--card-bg);
+    border: 0.5px solid var(--rule);
+    color: var(--ink);
+    white-space: pre-wrap;
+  }
+
+  .chat-msg.assistant.thinking {
+    color: var(--ink-light);
+    font-style: italic;
+  }
+
+  .chat-input-area {
+    border-top: 1px solid var(--rule);
+    background: var(--card-bg);
+    padding: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    flex-shrink: 0;
+  }
+
+  .chat-input {
+    flex: 1;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--chat-bg);
+    border: 1px solid var(--rule);
+    padding: 9px 12px;
+    resize: none;
+    outline: none;
+    min-height: 40px;
+    max-height: 120px;
+    line-height: 1.5;
+  }
+
+  .chat-input:focus { border-color: var(--ink); }
+
+  .chat-send {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: #fff;
+    background: var(--ink);
+    border: none;
+    padding: 9px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+    height: 40px;
+    flex-shrink: 0;
+  }
+
+  .chat-send:hover { background: var(--red); }
+  .chat-send:disabled { background: #aaa; cursor: not-allowed; }
+
+  .chat-hint {
+    font-size: 11px;
+    color: var(--ink-light);
+    padding: 8px 12px;
+    background: var(--chat-bg);
+    border-top: 1px solid var(--rule);
+    flex-shrink: 0;
+    line-height: 1.5;
+  }
+
+  /* Suggested prompts */
+  .chat-suggestions {
+    padding: 10px 12px;
+    background: var(--chat-bg);
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .suggestion-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    color: var(--ink-mid);
+    background: var(--card-bg);
+    border: 0.5px solid var(--rule);
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .suggestion-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* Main col elements */
+  .section-rule {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.25rem;
+  }
+
+  .section-rule span {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    white-space: nowrap;
+  }
+
+  .section-rule::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+
+  .control-group label {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 6px;
+  }
+
+  select {
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--card-bg);
+    border: 1px solid var(--rule);
+    padding: 9px 32px 9px 12px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23777' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    cursor: pointer;
+  }
+
+  select:focus { outline: none; border-color: var(--ink); }
+
+  .upload-area {
+    border: 1.5px dashed var(--rule);
+    background: var(--card-bg);
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    margin-bottom: 2rem;
+    position: relative;
+  }
+
+  .upload-area:hover, .upload-area.dragover {
+    border-color: var(--ink);
+    background: #F5F5F3;
+  }
+
+  .upload-area input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-icon { width: 36px; height: 36px; margin: 0 auto 12px; color: var(--ink-light); }
+  .upload-label { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
+  .upload-sub { font-size: 12px; color: var(--ink-light); }
+  .upload-sub strong { color: var(--ink); }
+
+  .file-loaded {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #F0F9F4;
+    border-left: 3px solid #2A7A4B;
+    margin-bottom: 2rem;
+  }
+
+  .file-loaded.visible { display: flex; }
+  .file-loaded-icon { color: #2A7A4B; flex-shrink: 0; }
+  .file-loaded-info { flex: 1; }
+  .file-loaded-name { font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 2px; }
+  .file-loaded-meta { font-size: 11px; color: var(--ink-light); }
+
+  .file-clear {
+    font-size: 11px;
+    color: var(--ink-light);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-family: 'DM Sans', sans-serif;
+    text-decoration: underline;
+  }
+
+  .file-clear:hover { color: var(--red); }
+
+  .perf-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-bottom: 2rem;
+  }
+
+  .perf-table th {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .perf-table td {
+    padding: 7px 8px;
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink-mid);
+    line-height: 1.4;
+  }
+
+  .perf-table tr:last-child td { border-bottom: none; }
+  .perf-table td:first-child { color: var(--ink); }
+  .perf-table td:not(:first-child) { white-space: nowrap; text-align: right; }
+
+  .generate-btn {
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--ink);
+    border: none;
+    padding: 14px 24px;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 2.5rem;
+  }
+
+  .generate-btn:hover { background: var(--red); }
+  .generate-btn:active { transform: scale(0.99); }
+  .generate-btn:disabled { background: #aaa; cursor: not-allowed; }
+
+  .analysis-box {
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--ink);
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+    display: none;
+  }
+
+  .analysis-box.visible { display: block; }
+
+  .analysis-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 6px;
+  }
+
+  .analysis-text { font-size: 13px; color: var(--ink-mid); line-height: 1.6; }
+
+  .results-area { display: none; }
+  .results-area.visible { display: block; }
+
+  .result-card {
+    border: 1px solid var(--rule);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 12px;
+    background: var(--card-bg);
+    position: relative;
+    transition: border-color 0.15s;
+  }
+
+  .result-card:hover { border-color: var(--ink); }
+
+  .result-card::before {
+    content: attr(data-num);
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    background: var(--ink);
+    color: #fff;
+    padding: 3px 8px;
+  }
+
+  .result-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.3;
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .result-reasoning {
+    font-size: 13px;
+    color: var(--ink-mid);
+    line-height: 1.6;
+    border-top: 1px solid var(--rule);
+    padding-top: 0.75rem;
+  }
+
+  .strategy-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--red-dark);
+    background: var(--red-light);
+    padding: 3px 8px;
+    margin-top: 10px;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .action-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    background: none;
+    border: 1px solid var(--rule);
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .action-btn:hover { color: var(--ink); border-color: var(--ink); }
+  .action-btn.copied { color: #2A7A4B; border-color: #2A7A4B; }
+
+  .status-msg {
+    font-size: 13px;
+    color: var(--ink-light);
+    padding: 1.5rem 0;
+    display: none;
+    text-align: center;
+  }
+
+  .status-msg.visible { display: block; }
+
+  .err-msg {
+    font-size: 13px;
+    color: var(--red-dark);
+    background: var(--red-light);
+    border-left: 3px solid var(--red);
+    padding: 10px 14px;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .err-msg.visible { display: block; }
+
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .spinner-dark {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--rule);
+    border-top-color: var(--ink-light);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 780px) {
+    .app-layout.has-results { grid-template-columns: 1fr; }
+    .app-layout.has-results .chat-col {
+      display: flex;
+      height: 420px;
+      position: static;
+      border-top: 3px solid var(--ink);
+    }
+    .app-layout.has-results .main-col { border-right: none; }
+    header { padding: 1.5rem; flex-direction: column; align-items: flex-start; }
+    .main-col { padding: 1.5rem 1.5rem 3rem; }
+    .controls-grid { grid-template-columns: 1fr; }
+    .masthead-title { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="masthead">
+    <div class="masthead-eyebrow">More Perfect Union</div>
+    <div class="masthead-title">YouTube Title Generator</div>
+    <div class="masthead-sub">Upload a script · Generate titles · Riff in chat</div>
+  </div>
+  <div class="header-badge">Internal Tool · Editorial</div>
+</header>
+
+<div class="app-layout" id="appLayout">
+
+  <!-- Main column -->
+  <div class="main-col">
+
+    <div class="section-rule"><span>Configuration</span></div>
+
+    <div class="controls-grid">
+      <div class="control-group">
+        <label>Optimize for</label>
+        <select id="metricSelect">
+          <option value="views">Total views</option>
+          <option value="ctr">Click-through rate</option>
+          <option value="combined">Views + CTR combined</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Suggestions</label>
+        <select id="countSelect">
+          <option value="5">5 titles</option>
+          <option value="3">3 titles</option>
+          <option value="8">8 titles</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Audience scope</label>
+        <select id="scopeSelect">
+          <option value="universal">Universal (max reach)</option>
+          <option value="specific">Topic-specific</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section-rule"><span>Script upload</span></div>
+
+    <div class="upload-area" id="uploadArea">
+      <input type="file" id="fileInput" accept=".txt,.md,.docx,.doc" />
+      <svg class="upload-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 24V12M18 12L13 17M18 12L23 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9 28h18M6 20v4a2 2 0 002 2h20a2 2 0 002-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <div class="upload-label">Drop your script here or click to browse</div>
+      <div class="upload-sub">Accepts <strong>.txt</strong>, <strong>.md</strong>, or <strong>.docx</strong> &middot; Google Docs: File &rarr; Download &rarr; Plain Text (.txt)</div>
+    </div>
+
+    <div class="file-loaded" id="fileLoaded">
+      <svg class="file-loaded-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M3 9.5L7 13.5L15 5.5" stroke="#2A7A4B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="file-loaded-info">
+        <div class="file-loaded-name" id="fileName"></div>
+        <div class="file-loaded-meta" id="fileMeta"></div>
+      </div>
+      <button class="file-clear" onclick="clearFile()">Remove</button>
+    </div>
+
+    <div class="err-msg" id="errMsg"></div>
+
+    <div class="section-rule"><span>Reference — top performers</span></div>
+    <table class="perf-table" id="perfTable"></table>
+
+    <button class="generate-btn" id="generateBtn" onclick="generate()">
+      <span id="btnText">Generate titles</span>
+    </button>
+
+    <div class="analysis-box" id="analysisBox">
+      <div class="analysis-label">Script analysis</div>
+      <div class="analysis-text" id="analysisText"></div>
+    </div>
+
+    <div class="status-msg" id="statusMsg"></div>
+    <div class="results-area" id="resultsArea"></div>
+
+  </div>
+
+  <!-- Chat column -->
+  <div class="chat-col" id="chatCol">
+    <div class="chat-header">Riff on titles</div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-msg assistant">Titles are ready. Ask me to riff on any of them, make variations, go more specific or more universal, change the tone — whatever you need.</div>
+    </div>
+    <div class="chat-suggestions" id="chatSuggestions">
+      <button class="suggestion-btn" onclick="sendSuggestion('Riff on option 1')">Riff on option 1</button>
+      <button class="suggestion-btn" onclick="sendSuggestion('Make these more specific')">More specific</button>
+      <button class="suggestion-btn" onclick="sendSuggestion('Make these more universal')">More universal</button>
+      <button class="suggestion-btn" onclick="sendSuggestion('Try a completely different angle')">Different angle</button>
+    </div>
+    <div class="chat-input-area">
+      <textarea class="chat-input" id="chatInput" placeholder="Ask me to riff, vary, or explore a different angle..." rows="1" onkeydown="handleKey(event)"></textarea>
+      <button class="chat-send" id="chatSend" onclick="sendChat()">Send</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let scriptText = '';
+let generatedTitles = [];
+let chatHistory = [];
+
+// ── Perf data (client-side for table display) ─────────────────────────────────
+const VIDEOS = [
+  ["I Took Bernie Into Deep Trump Country. Can He Win Them Over?",10594596,3.38],
+  ["What Dollar General Doesn't Want You To Know",7614450,6.39],
+  ["BlackRock: The Conspiracies You Don't Know",7552020,3.98],
+  ["How John Deere Robs Farmers Of $4 Billion A Year",7409503,3.44],
+  ["It's Not Just Shein: Why Are ALL Your Clothes Worse Now?",5900288,2.92],
+  ["We Put 7 Uber Drivers in One Room. What We Found Will Shock You.",5689244,6.28],
+  ["How Corporations Are Secretly Poisoning Our Food Supply",4789547,5.81],
+  ["We Went to Arkansas. The Farm Crisis Will Shock You",4726325,3.80],
+  ["I Tracked Down The Company Ruining Restaurants",4587056,4.55],
+  ["We Went to the Town Elon Musk Is Poisoning",3809449,4.15],
+  ["What Sam Altman Doesn't Want You To Know",3800792,3.44],
+  ["Private Equity's Ruthless Takeover Of The Last Affordable Housing In America",3787326,4.22],
+  ["We Had 400 People Shop For Groceries. What We Found Will Shock You.",3703035,3.51],
+  ["We Chased Driverless Trucks In Texas. What We Saw Will Scare You.",3624901,6.83],
+  ["Why Vegas Doesn't Care If You Visit Anymore",3567295,5.56],
+  ["How Stellantis Destroyed Jeep",3549688,3.13],
+  ["The Lie That Made Food Conglomerates Rich...And Is Slowly Poisoning Us",3527613,4.46],
+  ["I Worked At Palantir: The Tech Company Reshaping Reality",3497689,4.23],
+  ["How Vail Destroyed Skiing",3466418,4.61],
+  ["I Live 500 Feet From A Bitcoin Mine. My Life Is Hell.",3421846,6.34],
+];
+
+function getTop(metric, n) {
+  const vs = VIDEOS.map(([t,v,c]) => ({t,v,c}));
+  if (metric === 'views') return vs.sort((a,b)=>b.v-a.v).slice(0,n);
+  if (metric === 'ctr') return vs.filter(x=>x.v>500000).sort((a,b)=>b.c-a.c).slice(0,n);
+  const mv=Math.max(...vs.map(x=>x.v)), mc=Math.max(...vs.map(x=>x.c));
+  return vs.map(x=>({...x,s:(x.v/mv)*0.6+(x.c/mc)*0.4})).sort((a,b)=>b.s-a.s).slice(0,n);
+}
+
+function renderTable() {
+  const tops = getTop(document.getElementById('metricSelect').value, 6);
+  document.getElementById('perfTable').innerHTML =
+    `<thead><tr><th>Title</th><th>Views</th><th>CTR</th></tr></thead><tbody>` +
+    tops.map(x=>`<tr><td>${x.t}</td><td>${(x.v/1e6).toFixed(1)}M</td><td>${x.c}%</td></tr>`).join('') +
+    `</tbody>`;
+}
+document.getElementById('metricSelect').addEventListener('change', renderTable);
+renderTable();
+
+// ── File handling ─────────────────────────────────────────────────────────────
+const uploadArea = document.getElementById('uploadArea');
+const fileInput  = document.getElementById('fileInput');
+
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', e => { e.preventDefault(); uploadArea.classList.remove('dragover'); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+async function handleFile(file) {
+  showErr('');
+  const ext = file.name.split('.').pop().toLowerCase();
+  try {
+    if (ext === 'txt' || ext === 'md') {
+      scriptText = await file.text();
+    } else if (ext === 'docx') {
+      scriptText = await extractDocx(file);
+    } else {
+      showErr('Unsupported file type. Please upload .txt, .md, or .docx.');
+      return;
+    }
+    if (!scriptText || scriptText.trim().length < 100) { showErr('File appears empty or too short.'); return; }
+    const words = scriptText.trim().split(/\s+/).length;
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileMeta').textContent = `${words.toLocaleString()} words · Ready`;
+    document.getElementById('fileLoaded').className = 'file-loaded visible';
+    uploadArea.style.display = 'none';
+  } catch(e) {
+    showErr('Could not read the file. Try saving as .txt and uploading again.');
+    console.error(e);
+  }
+}
+
+async function extractDocx(file) {
+  const zip = await JSZip.loadAsync(await file.arrayBuffer());
+  const xml = await zip.file('word/document.xml').async('string');
+  return xml
+    .replace(/<w:br[^>]*\/>/g, '\n').replace(/<w:p[ >][^>]*>/g, '\n').replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&apos;/g,"'").replace(/&quot;/g,'"')
+    .replace(/\n{3,}/g,'\n\n').trim();
+}
+
+function clearFile() {
+  scriptText = '';
+  fileInput.value = '';
+  generatedTitles = [];
+  chatHistory = [];
+  document.getElementById('fileLoaded').className = 'file-loaded';
+  uploadArea.style.display = '';
+  document.getElementById('resultsArea').className = 'results-area';
+  document.getElementById('analysisBox').className = 'analysis-box';
+  document.getElementById('appLayout').classList.remove('has-results');
+  document.getElementById('chatMessages').innerHTML =
+    '<div class="chat-msg assistant">Titles are ready. Ask me to riff on any of them, make variations, go more specific or more universal, change the tone — whatever you need.</div>';
+  chatHistory = [];
+  showErr('');
+}
+
+function showErr(msg) {
+  const el = document.getElementById('errMsg');
+  el.textContent = msg;
+  el.className = msg ? 'err-msg visible' : 'err-msg';
+}
+
+// ── Generate titles ───────────────────────────────────────────────────────────
+async function generate() {
+  const btn = document.getElementById('generateBtn');
+  const btnText = document.getElementById('btnText');
+  const statusMsg = document.getElementById('statusMsg');
+  const resultsArea = document.getElementById('resultsArea');
+  const analysisBox = document.getElementById('analysisBox');
+
+  showErr('');
+  resultsArea.className = 'results-area';
+  analysisBox.className = 'analysis-box';
+
+  if (!scriptText) { showErr('Please upload a script file first.'); return; }
+
+  btn.disabled = true;
+  btnText.innerHTML = '<span class="spinner"></span>Analyzing & generating...';
+  statusMsg.textContent = 'Running analysis against MPU performance data...';
+  statusMsg.className = 'status-msg visible';
+
+  try {
+    const response = await fetch('/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        script_text: scriptText,
+        metric: document.getElementById('metricSelect').value,
+        count: parseInt(document.getElementById('countSelect').value),
+        scope: document.getElementById('scopeSelect').value,
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.detail || `Server error ${response.status}`);
+    }
+
+    const parsed = await response.json();
+    generatedTitles = parsed.titles;
+    statusMsg.className = 'status-msg';
+
+    // Seed chat history with full context
+    chatHistory = [{
+      role: 'user',
+      content: `You are a YouTube title strategist for More Perfect Union (MPU), a nonprofit journalism outlet covering working-class issues and corporate accountability. You have just generated title suggestions for a video script. Here is the script summary and the titles you generated:\n\nScript analysis: ${parsed.script_analysis}\n\nGenerated titles:\n${parsed.titles.map((t,i)=>`${i+1}. "${t.title}"\nReasoning: ${t.reasoning}`).join('\n\n')}\n\nThe user wants to riff on these titles. Help them explore variations, different angles, and new ideas. Be direct, creative, and punchy — match MPU's voice which is working-class, anti-corporate, and built for broad reach.`
+    }, {
+      role: 'assistant',
+      content: `Got it. I have the script and all ${parsed.titles.length} titles in context. What would you like to explore?`
+    }];
+
+    if (parsed.script_analysis) {
+      document.getElementById('analysisText').textContent = parsed.script_analysis;
+      analysisBox.className = 'analysis-box visible';
+    }
+
+    resultsArea.innerHTML =
+      `<div class="section-rule"><span>Title suggestions</span></div>` +
+      parsed.titles.map((t, i) => `
+        <div class="result-card" data-num="0${i+1}">
+          <div class="result-title">${t.title}</div>
+          <div class="result-reasoning">${t.reasoning}</div>
+          ${t.strategy_tag ? `<div class="strategy-tag">${t.strategy_tag}</div>` : ''}
+          <div class="card-actions">
+            <button class="action-btn" onclick="copyTitle(this, ${JSON.stringify(t.title)})">Copy</button>
+            <button class="action-btn" onclick="sendSuggestion('Riff on option ${i+1}: ${t.title.replace(/'/g,"\\'")}')">Riff on this ↗</button>
+          </div>
+        </div>`).join('');
+
+    resultsArea.className = 'results-area visible';
+
+    // Show chat panel
+    document.getElementById('appLayout').classList.add('has-results');
+
+    // Update suggestion buttons based on count
+    updateSuggestions(parsed.titles.length);
+
+  } catch(e) {
+    statusMsg.className = 'status-msg';
+    showErr('Error: ' + e.message);
+    console.error(e);
+  }
+
+  btn.disabled = false;
+  btnText.textContent = 'Regenerate titles';
+}
+
+function updateSuggestions(count) {
+  const el = document.getElementById('chatSuggestions');
+  const opts = [];
+  for (let i = 1; i <= Math.min(count, 3); i++) opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Riff on option ${i}')">Riff on option ${i}</button>`);
+  opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Try a completely different angle')">Different angle</button>`);
+  opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Make these more universal')">More universal</button>`);
+  opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Make these more specific and provocative')">More provocative</button>`);
+  el.innerHTML = opts.join('');
+}
+
+// ── Chat ──────────────────────────────────────────────────────────────────────
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function sendSuggestion(text) {
+  document.getElementById('chatInput').value = text;
+  sendChat();
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  const sendBtn = document.getElementById('chatSend');
+  input.value = '';
+  input.style.height = 'auto';
+  sendBtn.disabled = true;
+
+  appendMsg('user', msg);
+  chatHistory.push({ role: 'user', content: msg });
+
+  const thinkingEl = appendMsg('assistant', '...', true);
+
+  try {
+    const response = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: chatHistory })
+    });
+
+    if (!response.ok) throw new Error(`Server error ${response.status}`);
+    const data = await response.json();
+    const reply = data.reply;
+
+    thinkingEl.textContent = reply;
+    thinkingEl.classList.remove('thinking');
+    chatHistory.push({ role: 'assistant', content: reply });
+
+  } catch(e) {
+    thinkingEl.textContent = 'Something went wrong. Try again.';
+    thinkingEl.classList.remove('thinking');
+    console.error(e);
+  }
+
+  sendBtn.disabled = false;
+  input.focus();
+}
+
+function appendMsg(role, text, thinking = false) {
+  const el = document.createElement('div');
+  el.className = `chat-msg ${role}${thinking ? ' thinking' : ''}`;
+  el.textContent = text;
+  const messages = document.getElementById('chatMessages');
+  messages.appendChild(el);
+  messages.scrollTop = messages.scrollHeight;
+  return el;
+}
+
+function copyTitle(btn, title) {
+  navigator.clipboard.writeText(title).then(() => {
+    btn.textContent = 'Copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// Auto-resize textarea
+document.getElementById('chatInput').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+</script>
+</body>
+</html>
