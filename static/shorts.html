@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MPU YouTube Title Generator</title>
+<title>MPU Shorts Title Generator</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=DM+Sans:wght@300;400;500&display=swap');
 
@@ -20,6 +20,8 @@
     --bg: #FAFAF8;
     --card-bg: #FFFFFF;
     --chat-bg: #F3F3F0;
+    --shorts-accent: #FF0000;
+    --shorts-light: #FFF0F0;
   }
 
   body {
@@ -61,7 +63,31 @@
     margin-top: 3px;
   }
 
-  .header-badge {
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nav-link {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    text-decoration: none;
+    border: 1px solid var(--rule);
+    padding: 6px 12px;
+    transition: all 0.15s;
+  }
+
+  .nav-link:hover { color: var(--ink); border-color: var(--ink); }
+  .nav-link.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+  .shorts-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     font-size: 10px;
     font-weight: 500;
     letter-spacing: 0.1em;
@@ -69,15 +95,19 @@
     border: 1px solid var(--rule);
     padding: 6px 12px;
     color: var(--ink-light);
-    white-space: nowrap;
   }
 
-  /* Layout: two-column once results exist */
+  .shorts-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--shorts-accent);
+    border-radius: 50%;
+  }
+
   .app-layout {
     display: grid;
     grid-template-columns: 1fr;
     min-height: calc(100vh - 100px);
-    transition: grid-template-columns 0.3s ease;
   }
 
   .app-layout.has-results {
@@ -95,7 +125,6 @@
     border-right: 1px solid var(--rule);
   }
 
-  /* Chat column */
   .chat-col {
     display: none;
     flex-direction: column;
@@ -104,9 +133,7 @@
     top: 0;
   }
 
-  .app-layout.has-results .chat-col {
-    display: flex;
-  }
+  .app-layout.has-results .chat-col { display: flex; }
 
   .chat-header {
     padding: 1rem 1.25rem;
@@ -137,24 +164,9 @@
     padding: 10px 14px;
   }
 
-  .chat-msg.user {
-    align-self: flex-end;
-    background: var(--ink);
-    color: #fff;
-  }
-
-  .chat-msg.assistant {
-    align-self: flex-start;
-    background: var(--card-bg);
-    border: 0.5px solid var(--rule);
-    color: var(--ink);
-    white-space: pre-wrap;
-  }
-
-  .chat-msg.assistant.thinking {
-    color: var(--ink-light);
-    font-style: italic;
-  }
+  .chat-msg.user { align-self: flex-end; background: var(--ink); color: #fff; }
+  .chat-msg.assistant { align-self: flex-start; background: var(--card-bg); border: 0.5px solid var(--rule); color: var(--ink); white-space: pre-wrap; }
+  .chat-msg.assistant.thinking { color: var(--ink-light); font-style: italic; }
 
   .chat-input-area {
     border-top: 1px solid var(--rule);
@@ -193,7 +205,6 @@
     padding: 9px 14px;
     cursor: pointer;
     transition: background 0.15s;
-    white-space: nowrap;
     height: 40px;
     flex-shrink: 0;
   }
@@ -201,17 +212,6 @@
   .chat-send:hover { background: var(--red); }
   .chat-send:disabled { background: #aaa; cursor: not-allowed; }
 
-  .chat-hint {
-    font-size: 11px;
-    color: var(--ink-light);
-    padding: 8px 12px;
-    background: var(--chat-bg);
-    border-top: 1px solid var(--rule);
-    flex-shrink: 0;
-    line-height: 1.5;
-  }
-
-  /* Suggested prompts */
   .chat-suggestions {
     padding: 10px 12px;
     background: var(--chat-bg);
@@ -235,7 +235,6 @@
 
   .suggestion-btn:hover { border-color: var(--ink); color: var(--ink); }
 
-  /* Main col elements */
   .section-rule {
     display: flex;
     align-items: center;
@@ -252,12 +251,7 @@
     white-space: nowrap;
   }
 
-  .section-rule::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--rule);
-  }
+  .section-rule::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
 
   .controls-grid {
     display: grid;
@@ -293,6 +287,18 @@
 
   select:focus { outline: none; border-color: var(--ink); }
 
+  .shorts-context-box {
+    background: var(--shorts-light);
+    border-left: 3px solid var(--shorts-accent);
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+    font-size: 13px;
+    color: var(--ink-mid);
+    line-height: 1.6;
+  }
+
+  .shorts-context-box strong { color: var(--ink); font-weight: 500; }
+
   .upload-area {
     border: 1.5px dashed var(--rule);
     background: var(--card-bg);
@@ -304,10 +310,7 @@
     position: relative;
   }
 
-  .upload-area:hover, .upload-area.dragover {
-    border-color: var(--ink);
-    background: #F5F5F3;
-  }
+  .upload-area:hover, .upload-area.dragover { border-color: var(--ink); background: #F5F5F3; }
 
   .upload-area input[type="file"] {
     position: absolute;
@@ -414,16 +417,7 @@
   }
 
   .analysis-box.visible { display: block; }
-
-  .analysis-label {
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--ink-light);
-    margin-bottom: 6px;
-  }
-
+  .analysis-label { font-size: 10px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 6px; }
   .analysis-text { font-size: 13px; color: var(--ink-mid); line-height: 1.6; }
 
   .results-area { display: none; }
@@ -460,8 +454,16 @@
     color: var(--ink);
     line-height: 1.3;
     margin-top: 1.25rem;
+    margin-bottom: 6px;
+  }
+
+  .char-count {
+    font-size: 11px;
+    color: var(--ink-light);
     margin-bottom: 0.75rem;
   }
+
+  .char-count.warn { color: #B85C00; }
 
   .result-reasoning {
     font-size: 13px;
@@ -483,11 +485,7 @@
     margin-top: 10px;
   }
 
-  .card-actions {
-    display: flex;
-    gap: 6px;
-    margin-top: 10px;
-  }
+  .card-actions { display: flex; gap: 6px; margin-top: 10px; }
 
   .action-btn {
     font-family: 'DM Sans', sans-serif;
@@ -506,60 +504,19 @@
   .action-btn:hover { color: var(--ink); border-color: var(--ink); }
   .action-btn.copied { color: #2A7A4B; border-color: #2A7A4B; }
 
-  .status-msg {
-    font-size: 13px;
-    color: var(--ink-light);
-    padding: 1.5rem 0;
-    display: none;
-    text-align: center;
-  }
-
+  .status-msg { font-size: 13px; color: var(--ink-light); padding: 1.5rem 0; display: none; text-align: center; }
   .status-msg.visible { display: block; }
 
-  .err-msg {
-    font-size: 13px;
-    color: var(--red-dark);
-    background: var(--red-light);
-    border-left: 3px solid var(--red);
-    padding: 10px 14px;
-    margin-bottom: 1rem;
-    display: none;
-  }
-
+  .err-msg { font-size: 13px; color: var(--red-dark); background: var(--red-light); border-left: 3px solid var(--red); padding: 10px 14px; margin-bottom: 1rem; display: none; }
   .err-msg.visible { display: block; }
 
-  .spinner {
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    margin-right: 6px;
-    vertical-align: middle;
-  }
-
-  .spinner-dark {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    border: 2px solid var(--rule);
-    border-top-color: var(--ink-light);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-  }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 6px; vertical-align: middle; }
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
   @media (max-width: 780px) {
     .app-layout.has-results { grid-template-columns: 1fr; }
-    .app-layout.has-results .chat-col {
-      display: flex;
-      height: 420px;
-      position: static;
-      border-top: 3px solid var(--ink);
-    }
+    .app-layout.has-results .chat-col { display: flex; height: 420px; position: static; border-top: 3px solid var(--ink); }
     .app-layout.has-results .main-col { border-right: none; }
     header { padding: 1.5rem; flex-direction: column; align-items: flex-start; }
     .main-col { padding: 1.5rem 1.5rem 3rem; }
@@ -573,19 +530,18 @@
 <header>
   <div class="masthead">
     <div class="masthead-eyebrow">More Perfect Union</div>
-    <div class="masthead-title">YouTube Title Generator</div>
-    <div class="masthead-sub">Upload a script · Generate titles · Riff in chat</div>
+    <div class="masthead-title">Shorts Title Generator</div>
+    <div class="masthead-sub">Upload a script or brief · Generate titles · Riff in chat</div>
   </div>
-  <div style="display:flex;align-items:center;gap:10px;">
-    <a href="/" style="font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#fff;text-decoration:none;border:1px solid #1A1A1A;padding:6px 12px;background:#1A1A1A;">Long-form</a>
-    <a href="/shorts.html" style="font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:#777;text-decoration:none;border:1px solid #E0E0E0;padding:6px 12px;">Shorts</a>
-    <div style="font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;border:1px solid #E0E0E0;padding:6px 12px;color:#777;">Internal Tool · Editorial</div>
+  <div class="header-right">
+    <a href="/" class="nav-link">Long-form</a>
+    <a href="/shorts.html" class="nav-link active">Shorts</a>
+    <div class="shorts-badge"><div class="shorts-dot"></div>Shorts</div>
   </div>
 </header>
 
 <div class="app-layout" id="appLayout">
 
-  <!-- Main column -->
   <div class="main-col">
 
     <div class="section-rule"><span>Configuration</span></div>
@@ -608,15 +564,19 @@
         </select>
       </div>
       <div class="control-group">
-        <label>Audience scope</label>
+        <label>Framing</label>
         <select id="scopeSelect">
           <option value="universal">Universal (max reach)</option>
-          <option value="specific">Topic-specific</option>
+          <option value="specific">Story-specific</option>
         </select>
       </div>
     </div>
 
-    <div class="section-rule"><span>Script upload</span></div>
+    <div class="shorts-context-box">
+      <strong>Shorts titles work differently from long-form.</strong> They need to land in under 2 seconds on a scrolling feed — so urgency, a named villain, and a clear promise of revelation matter more than nuance. YouTube recommends keeping Shorts titles under <strong>70 characters</strong>. Each suggestion will show a character count.
+    </div>
+
+    <div class="section-rule"><span>Script or brief</span></div>
 
     <div class="upload-area" id="uploadArea">
       <input type="file" id="fileInput" accept=".txt,.md,.docx,.doc" />
@@ -624,8 +584,8 @@
         <path d="M18 24V12M18 12L13 17M18 12L23 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M9 28h18M6 20v4a2 2 0 002 2h20a2 2 0 002-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
-      <div class="upload-label">Drop your script here or click to browse</div>
-      <div class="upload-sub">Accepts <strong>.txt</strong>, <strong>.md</strong>, or <strong>.docx</strong> &middot; Google Docs: File &rarr; Download &rarr; Plain Text (.txt)</div>
+      <div class="upload-label">Drop your script or brief here, or click to browse</div>
+      <div class="upload-sub">Accepts <strong>.txt</strong>, <strong>.md</strong>, or <strong>.docx</strong> &middot; Can be a full script or just a one-paragraph brief</div>
     </div>
 
     <div class="file-loaded" id="fileLoaded">
@@ -641,7 +601,7 @@
 
     <div class="err-msg" id="errMsg"></div>
 
-    <div class="section-rule"><span>Reference — top performers</span></div>
+    <div class="section-rule"><span>Reference — top performing shorts</span></div>
     <table class="perf-table" id="perfTable"></table>
 
     <button class="generate-btn" id="generateBtn" onclick="generate()">
@@ -649,7 +609,7 @@
     </button>
 
     <div class="analysis-box" id="analysisBox">
-      <div class="analysis-label">Script analysis</div>
+      <div class="analysis-label">Content analysis</div>
       <div class="analysis-text" id="analysisText"></div>
     </div>
 
@@ -662,12 +622,12 @@
   <div class="chat-col" id="chatCol">
     <div class="chat-header">Riff on titles</div>
     <div class="chat-messages" id="chatMessages">
-      <div class="chat-msg assistant">Titles are ready. Ask me to riff on any of them, make variations, go more specific or more universal, change the tone — whatever you need.</div>
+      <div class="chat-msg assistant">Titles are ready. Ask me to riff, try a different angle, go harder on the villain, make them punchier — whatever you need.</div>
     </div>
     <div class="chat-suggestions" id="chatSuggestions">
       <button class="suggestion-btn" onclick="sendSuggestion('Riff on option 1')">Riff on option 1</button>
-      <button class="suggestion-btn" onclick="sendSuggestion('Make these more specific')">More specific</button>
-      <button class="suggestion-btn" onclick="sendSuggestion('Make these more universal')">More universal</button>
+      <button class="suggestion-btn" onclick="sendSuggestion('Make these punchier and shorter')">Shorter & punchier</button>
+      <button class="suggestion-btn" onclick="sendSuggestion('Lead harder with the villain')">Harder on villain</button>
       <button class="suggestion-btn" onclick="sendSuggestion('Try a completely different angle')">Different angle</button>
     </div>
     <div class="chat-input-area">
@@ -681,39 +641,77 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 
-// ── State ─────────────────────────────────────────────────────────────────────
 let scriptText = '';
-let generatedTitles = [];
 let chatHistory = [];
 
-// ── Perf data (client-side for table display) ─────────────────────────────────
-const VIDEOS = [
-  ["I Took Bernie Into Deep Trump Country. Can He Win Them Over?",10594596,3.38],
-  ["What Dollar General Doesn't Want You To Know",7614450,6.39],
-  ["BlackRock: The Conspiracies You Don't Know",7552020,3.98],
-  ["How John Deere Robs Farmers Of $4 Billion A Year",7409503,3.44],
-  ["It's Not Just Shein: Why Are ALL Your Clothes Worse Now?",5900288,2.92],
-  ["We Put 7 Uber Drivers in One Room. What We Found Will Shock You.",5689244,6.28],
-  ["How Corporations Are Secretly Poisoning Our Food Supply",4789547,5.81],
-  ["We Went to Arkansas. The Farm Crisis Will Shock You",4726325,3.80],
-  ["I Tracked Down The Company Ruining Restaurants",4587056,4.55],
-  ["We Went to the Town Elon Musk Is Poisoning",3809449,4.15],
-  ["What Sam Altman Doesn't Want You To Know",3800792,3.44],
-  ["Private Equity's Ruthless Takeover Of The Last Affordable Housing In America",3787326,4.22],
-  ["We Had 400 People Shop For Groceries. What We Found Will Shock You.",3703035,3.51],
-  ["We Chased Driverless Trucks In Texas. What We Saw Will Scare You.",3624901,6.83],
-  ["Why Vegas Doesn't Care If You Visit Anymore",3567295,5.56],
-  ["How Stellantis Destroyed Jeep",3549688,3.13],
-  ["The Lie That Made Food Conglomerates Rich...And Is Slowly Poisoning Us",3527613,4.46],
-  ["I Worked At Palantir: The Tech Company Reshaping Reality",3497689,4.23],
-  ["How Vail Destroyed Skiing",3466418,4.61],
-  ["I Live 500 Feet From A Bitcoin Mine. My Life Is Hell.",3421846,6.34],
+const SHORTS = [
+  ["What Zuckerberg Doesn't Want You to See",8970318,7.8],
+  ["Kristi Noem used our tax dollars as a personal bank for her friends",5757876,7.05],
+  ["Peter Thiel Doesn't Want You to See This Clip",4853806,6.09],
+  ["The Epstein Crimes You Haven't Heard About, Part 1",3752045,6.7],
+  ["Why Bitcoin Could Hit $0",3619843,5.92],
+  ["What Jeff Bezos Doesn't Want You to Know",3554607,8.97],
+  ["The Billionaire Oligarchs Pushing For War With Iran",3460505,8.25],
+  ["How Larry Ellison got so rich",3027507,6.96],
+  ["Zohran Mamdani's radical plan to clear NYC's streets",3009068,8.33],
+  ["Hot Mic Catches Zuckerberg Kneeling to Trump",2679203,5.98],
+  ["John Deere is Making Life Miserable For Farmers — And Costing Many Their Lives",2572146,8.91],
+  ["What the Epstein emails say about Bernie Sanders",2500698,8.5],
+  ["Joann's is Closing in May. You Can Blame Private Equity",2458099,7.22],
+  ["This Meta data center is the size of Manhattan. It could bankrupt Louisiana farmers.",2416290,7.45],
+  ["U.S. Senator attacks anti-war Marine - breaking his hand",2082104,11.29],
+  ["What Larry Ellison Doesn't Want You to Know",2058503,6.95],
+  ["Their landlord abandoned them, then jacked up the rent. Now they're fighting back.",2057600,9.35],
+  ["Zohran Mamdani's Unrealistic Plan to Tax the Rich — Explained",1989584,7.66],
+  ["Tech Billionaires Have Found a NEW Way to Extort You",1947659,8.28],
+  ["Trump is Using DoorDash to Gaslight You About Grocery Prices",1935339,9.33],
+  ["Corporations have found a NEW way to rip you off",1816892,8.32],
+  ["Marc Andreessen Doesn't Want You to See This",1793993,8.65],
+  ["How Dollar General Is Secretly Robbing Its Customers",1760305,8.21],
+  ["What DoorDash Doesn't Want You To Know",1445343,8.81],
+  ["Half this town was just laid off. It's going to be a ghost town.",1329858,7.9],
+  ["What Airlines Don't Want You to Know",1326001,8.29],
+  ["What Life is REALLY Like Next to Zuckerberg's Manhattan-Sized Data Center",1258206,9.1],
+  ["We Found Private Equity's Latest Target",1214546,7.1],
+  ["What Trump's Tariffs Are REALLY About",1110526,7.43],
+  ["The REAL Freeloaders in America Are Not Who You Think",1100140,7.67],
+  ["What Elon Musk Doesn't Want You to Know",1054439,12.0],
+  ["Corporations have found a NEW WAY to rip you off",1004326,8.66],
+  ["The Corporate Ripoff Scheme Looting Your Pocketbook",993915,7.56],
+  ["Elon Musk is poisoning ANOTHER city. It's torture to be outside.",915471,8.27],
+  ["Landlords freak out after committee votes for renter protections",905671,9.4],
+  ["The REAL reason Trump is attacking public transit, Part 1",801907,8.45],
+  ["Why Wall Street Execs Are Losing Their Minds",799136,8.24],
+  ["This Billionaire Couple Stole California's Water Supply",764828,7.7],
+  ["What Republicans Don't Want You to Know About Their Stock Trading Ban",760940,8.47],
+  ["We found the hidden reason Iran war propaganda is everywhere",735969,8.33],
+  ["The REAL Reason Trump Wants to Take Greenland Next",730632,7.81],
+  ["Twin Cities SHUT DOWN in historic general strike against ICE",711972,8.41],
+  ["Trump Says He's Bailing Out Farmers. Here's Who REALLY Benefits",690710,7.85],
+  ["Why the Real Estate Lobby is Terrified of Mayor Mamdani",674322,8.16],
+  ["Trump is using a Walmart promotion to gaslight you about Thanksgiving prices",631796,7.92],
+  ["Economic Blackout Spreads From Coast to Coast",597312,8.25],
+  ["The secret, steroid-fueled group running the GOP",587244,7.44],
+  ["Apple Tried to Stop Jon Stewart from Interviewing Lina Khan",574963,7.37],
+  ["What the Epstein files say about Bernie Sanders (Part 2)",524628,7.63],
+  ["Argentinians have a dire warning for America",512180,8.2],
+  ["ICE Raided Their Apartment Building. Instead of Scattering, Tenants Are Organizing.",479980,8.53],
+  ["Trump Said He Would Save American Jobs. So Why Is This Iowa Auto Factory Closing?",478988,8.96],
+  ["The First U.S. General Strike In 80 Years Is Happening Now In Minnesota",471124,9.43],
+  ["You Need to Know This About Prime Day Deals",470842,8.68],
+  ["Striking Baristas SHUT DOWN The Largest Starbucks Distribution Center In The World",469458,8.64],
+  ["Tucson Voted Against An Amazon Data Center In the Desert. The Tech Giant Is Building It Anyway.",465920,8.04],
+  ["Why Spotify SUCKS Now",458642,7.52],
+  ["Tyson Foods Is Laying Off 30% Of This Nebraska Town",451434,7.74],
+  ["The TRUE cost of your Amazon deliveries",445503,7.67],
+  ["We Found the Hidden Reason Car Insurance Rates Have Skyrocketed",473442,7.51],
+  ["What Republicans Don't Want You to Know About Their Stock Trading Ban",760940,8.47],
 ];
 
 function getTop(metric, n) {
-  const vs = VIDEOS.map(([t,v,c]) => ({t,v,c}));
+  const vs = SHORTS.map(([t,v,c]) => ({t,v,c}));
   if (metric === 'views') return vs.sort((a,b)=>b.v-a.v).slice(0,n);
-  if (metric === 'ctr') return vs.filter(x=>x.v>500000).sort((a,b)=>b.c-a.c).slice(0,n);
+  if (metric === 'ctr') return vs.sort((a,b)=>b.c-a.c).slice(0,n);
   const mv=Math.max(...vs.map(x=>x.v)), mc=Math.max(...vs.map(x=>x.c));
   return vs.map(x=>({...x,s:(x.v/mv)*0.6+(x.c/mc)*0.4})).sort((a,b)=>b.s-a.s).slice(0,n);
 }
@@ -728,9 +726,9 @@ function renderTable() {
 document.getElementById('metricSelect').addEventListener('change', renderTable);
 renderTable();
 
-// ── File handling ─────────────────────────────────────────────────────────────
+// File handling
 const uploadArea = document.getElementById('uploadArea');
-const fileInput  = document.getElementById('fileInput');
+const fileInput = document.getElementById('fileInput');
 
 uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
 uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
@@ -749,7 +747,7 @@ async function handleFile(file) {
       showErr('Unsupported file type. Please upload .txt, .md, or .docx.');
       return;
     }
-    if (!scriptText || scriptText.trim().length < 100) { showErr('File appears empty or too short.'); return; }
+    if (!scriptText || scriptText.trim().length < 20) { showErr('File appears empty or too short.'); return; }
     const words = scriptText.trim().split(/\s+/).length;
     document.getElementById('fileName').textContent = file.name;
     document.getElementById('fileMeta').textContent = `${words.toLocaleString()} words · Ready`;
@@ -773,7 +771,6 @@ async function extractDocx(file) {
 function clearFile() {
   scriptText = '';
   fileInput.value = '';
-  generatedTitles = [];
   chatHistory = [];
   document.getElementById('fileLoaded').className = 'file-loaded';
   uploadArea.style.display = '';
@@ -781,7 +778,7 @@ function clearFile() {
   document.getElementById('analysisBox').className = 'analysis-box';
   document.getElementById('appLayout').classList.remove('has-results');
   document.getElementById('chatMessages').innerHTML =
-    '<div class="chat-msg assistant">Titles are ready. Ask me to riff on any of them, make variations, go more specific or more universal, change the tone — whatever you need.</div>';
+    '<div class="chat-msg assistant">Titles are ready. Ask me to riff, try a different angle, go harder on the villain, make them punchier — whatever you need.</div>';
   chatHistory = [];
   showErr('');
 }
@@ -792,7 +789,6 @@ function showErr(msg) {
   el.className = msg ? 'err-msg visible' : 'err-msg';
 }
 
-// ── Generate titles ───────────────────────────────────────────────────────────
 async function generate() {
   const btn = document.getElementById('generateBtn');
   const btnText = document.getElementById('btnText');
@@ -804,15 +800,15 @@ async function generate() {
   resultsArea.className = 'results-area';
   analysisBox.className = 'analysis-box';
 
-  if (!scriptText) { showErr('Please upload a script file first.'); return; }
+  if (!scriptText) { showErr('Please upload a script or brief first.'); return; }
 
   btn.disabled = true;
   btnText.innerHTML = '<span class="spinner"></span>Analyzing & generating...';
-  statusMsg.textContent = 'Running analysis against MPU performance data...';
+  statusMsg.textContent = 'Running analysis against MPU Shorts performance data...';
   statusMsg.className = 'status-msg visible';
 
   try {
-    const response = await fetch('/generate', {
+    const response = await fetch('/generate-shorts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -829,17 +825,15 @@ async function generate() {
     }
 
     const parsed = await response.json();
-    generatedTitles = parsed.titles;
-    statusMsg.className = 'status-msg';
-
-    // Seed chat history with full context
     chatHistory = [{
       role: 'user',
-      content: `You are a YouTube title strategist for More Perfect Union (MPU), a nonprofit journalism outlet covering working-class issues and corporate accountability. You have just generated title suggestions for a video script. Here is the script summary and the titles you generated:\n\nScript analysis: ${parsed.script_analysis}\n\nGenerated titles:\n${parsed.titles.map((t,i)=>`${i+1}. "${t.title}"\nReasoning: ${t.reasoning}`).join('\n\n')}\n\nThe user wants to riff on these titles. Help them explore variations, different angles, and new ideas. Be direct, creative, and punchy — match MPU's voice which is working-class, anti-corporate, and built for broad reach.`
+      content: `You are a YouTube Shorts title strategist for More Perfect Union (MPU). You have just generated title suggestions. Script analysis: ${parsed.script_analysis}\n\nGenerated titles:\n${parsed.titles.map((t,i)=>`${i+1}. "${t.title}" (${t.title.length} chars)\nReasoning: ${t.reasoning}`).join('\n\n')}\n\nHelp the user riff on these. Keep Shorts titles under 70 characters. Be direct, punchy, working-class in voice.`
     }, {
       role: 'assistant',
-      content: `Got it. I have the script and all ${parsed.titles.length} titles in context. What would you like to explore?`
+      content: `Got it — ${parsed.titles.length} titles ready. What would you like to explore?`
     }];
+
+    statusMsg.className = 'status-msg';
 
     if (parsed.script_analysis) {
       document.getElementById('analysisText').textContent = parsed.script_analysis;
@@ -848,23 +842,25 @@ async function generate() {
 
     resultsArea.innerHTML =
       `<div class="section-rule"><span>Title suggestions</span></div>` +
-      parsed.titles.map((t, i) => `
+      parsed.titles.map((t, i) => {
+        const len = t.title.length;
+        const warnClass = len > 70 ? ' warn' : '';
+        const charNote = len > 70 ? `${len} chars — consider trimming` : `${len} chars`;
+        return `
         <div class="result-card" data-num="0${i+1}">
           <div class="result-title">${t.title}</div>
+          <div class="char-count${warnClass}">${charNote}</div>
           <div class="result-reasoning">${t.reasoning}</div>
           ${t.strategy_tag ? `<div class="strategy-tag">${t.strategy_tag}</div>` : ''}
           <div class="card-actions">
             <button class="action-btn" onclick="copyTitle(this, ${JSON.stringify(t.title)})">Copy</button>
             <button class="action-btn" onclick="sendSuggestion('Riff on option ${i+1}: ${t.title.replace(/'/g,"\\'")}')">Riff on this ↗</button>
           </div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
 
     resultsArea.className = 'results-area visible';
-
-    // Show chat panel
     document.getElementById('appLayout').classList.add('has-results');
-
-    // Update suggestion buttons based on count
     updateSuggestions(parsed.titles.length);
 
   } catch(e) {
@@ -881,13 +877,12 @@ function updateSuggestions(count) {
   const el = document.getElementById('chatSuggestions');
   const opts = [];
   for (let i = 1; i <= Math.min(count, 3); i++) opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Riff on option ${i}')">Riff on option ${i}</button>`);
+  opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Make these shorter and punchier, under 60 characters')">Shorter & punchier</button>`);
+  opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Lead harder with a named villain')">Harder on villain</button>`);
   opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Try a completely different angle')">Different angle</button>`);
-  opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Make these more universal')">More universal</button>`);
-  opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Make these more specific and provocative')">More provocative</button>`);
   el.innerHTML = opts.join('');
 }
 
-// ── Chat ──────────────────────────────────────────────────────────────────────
 function handleKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
 }
@@ -922,7 +917,6 @@ async function sendChat() {
     if (!response.ok) throw new Error(`Server error ${response.status}`);
     const data = await response.json();
     const reply = data.reply;
-
     thinkingEl.textContent = reply;
     thinkingEl.classList.remove('thinking');
     chatHistory.push({ role: 'assistant', content: reply });
@@ -955,7 +949,6 @@ function copyTitle(btn, title) {
   });
 }
 
-// Auto-resize textarea
 document.getElementById('chatInput').addEventListener('input', function() {
   this.style.height = 'auto';
   this.style.height = Math.min(this.scrollHeight, 120) + 'px';
