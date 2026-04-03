@@ -649,7 +649,7 @@
     </button>
 
     <div class="analysis-box" id="analysisBox">
-      <div class="analysis-label">Script analysis</div>
+      <div class="analysis-label">Two-axis script analysis — partisan sort risk · curiosity gap opportunity · investigation frame</div>
       <div class="analysis-text" id="analysisText"></div>
     </div>
 
@@ -662,7 +662,7 @@
   <div class="chat-col" id="chatCol">
     <div class="chat-header">Riff on titles</div>
     <div class="chat-messages" id="chatMessages">
-      <div class="chat-msg assistant">Titles are ready. Ask me to riff on any of them, make variations, go more specific or more universal, change the tone — whatever you need.</div>
+      <div class="chat-msg assistant">Titles are ready, each evaluated against the two-axis framework (partisan sort + curiosity gap). Use "Stress test all" to check which titles a Fox News viewer might bounce on, or riff on any individual option.</div>
     </div>
     <div class="chat-suggestions" id="chatSuggestions">
       <button class="suggestion-btn" onclick="sendSuggestion('Riff on option 1')">Riff on option 1</button>
@@ -832,13 +832,13 @@ async function generate() {
     generatedTitles = parsed.titles;
     statusMsg.className = 'status-msg';
 
-    // Seed chat history with full context
+    // Seed chat history with full context including two-axis framework
     chatHistory = [{
       role: 'user',
-      content: `You are a YouTube title strategist for More Perfect Union (MPU), a nonprofit journalism outlet covering working-class issues and corporate accountability. You have just generated title suggestions for a video script. Here is the script summary and the titles you generated:\n\nScript analysis: ${parsed.script_analysis}\n\nGenerated titles:\n${parsed.titles.map((t,i)=>`${i+1}. "${t.title}"\nReasoning: ${t.reasoning}`).join('\n\n')}\n\nThe user wants to riff on these titles. Help them explore variations, different angles, and new ideas. Be direct, creative, and punchy — match MPU's voice which is working-class, anti-corporate, and built for broad reach.`
+      content: `You are a YouTube title strategist for More Perfect Union (MPU), a nonprofit journalism outlet covering working-class issues and corporate accountability. MPU's unique asset is a cross-partisan audience including Fox News viewers. Breakouts happen when the full base engages — when a title politically sorts the audience, the algorithm limits distribution.\n\nYou use a two-axis framework:\n- Axis 1 (Partisan Sort): Does the title politically code the conflict before anyone clicks? Even apolitical targets can be coded by packaging (e.g. "Plot to Break California" = blue-state politics).\n- Axis 2 (Curiosity Gap): Does the title open a genuine unknown, or confirm what viewers already believe? Confirming prior beliefs suppresses algorithmic reach.\n- The Investigation Frame: For politically charged content, position the viewer as a detective following a contradiction. Villain = the system/mechanism, not the political figure.\n- The Stress Test: Can a Fox News viewer get past this title without hitting a signal that says "this isn't for me"?\n\nScript analysis: ${parsed.script_analysis}\n\nGenerated titles:\n${parsed.titles.map((t,i)=>`${i+1}. "${t.title}"\nReasoning: ${t.reasoning}`).join('\n\n')}\n\nHelp the user riff. Be direct and punchy. Always evaluate suggestions against both axes. Flag any title that risks partisan sorting.`
     }, {
       role: 'assistant',
-      content: `Got it. I have the script and all ${parsed.titles.length} titles in context. What would you like to explore?`
+      content: `Got it — ${parsed.titles.length} titles ready, all evaluated against both axes. What would you like to explore?`
     }];
 
     if (parsed.script_analysis) {
@@ -856,6 +856,7 @@ async function generate() {
           <div class="card-actions">
             <button class="action-btn" onclick="copyTitle(this, ${JSON.stringify(t.title)})">Copy</button>
             <button class="action-btn" onclick="sendSuggestion('Riff on option ${i+1}: ${t.title.replace(/'/g,"\\'")}')">Riff on this ↗</button>
+            <button class="action-btn" onclick="sendSuggestion('Run the stress test on option ${i+1}: ${t.title.replace(/'/g,"\\'")} — would a Fox News viewer click this?')">Stress test ↗</button>
           </div>
         </div>`).join('');
 
@@ -881,9 +882,10 @@ function updateSuggestions(count) {
   const el = document.getElementById('chatSuggestions');
   const opts = [];
   for (let i = 1; i <= Math.min(count, 3); i++) opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Riff on option ${i}')">Riff on option ${i}</button>`);
-  opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Try a completely different angle')">Different angle</button>`);
-  opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Make these more universal')">More universal</button>`);
-  opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Make these more specific and provocative')">More provocative</button>`);
+  opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Run the stress test on all titles — which ones would a Fox News viewer bounce on?')">Stress test all</button>`);
+  opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Reframe any titles that risk partisan sorting using the investigation frame')">Fix partisan sort</button>`);
+  opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Which title has the strongest curiosity gap — the biggest unknown that the viewer has no answer to without watching?')">Best curiosity gap</button>`);
+  opts.push(`<button class="suggestion-btn" onclick="sendSuggestion('Try a completely different angle that avoids any partisan signal')">Different angle</button>`);
   el.innerHTML = opts.join('');
 }
 

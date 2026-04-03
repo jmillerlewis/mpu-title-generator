@@ -143,7 +143,42 @@ async def generate(req: GenerateRequest, _: None = Depends(require_auth)):
 
     prompt = f"""You are a YouTube title strategist for More Perfect Union (MPU), a nonprofit video journalism outlet covering working-class economic issues and corporate accountability.
 
-First, do a thorough analysis of what drives high performance in MPU's top videos — look at psychological triggers, emotional entry points, structural patterns, topic categories, what the viewer is promised, and how the best titles differ from generic YouTube titles. Use that analysis to generate {req.count} genuinely fresh title options for the script below. Do NOT simply plug the script's subject into existing title templates.
+MPU's unique competitive advantage is a cross-partisan audience that includes Fox News viewers, MSNBC viewers, labor enthusiasts, and Gen Z. Breakouts happen when the full audience engages. When a title politically sorts the audience — signaling "this is partisan content" before anyone clicks — the algorithm reads the uneven engagement as a ceiling and limits distribution.
+
+## The Two-Axis Framework
+
+Every title must pass BOTH axes to break out. Passing one but failing the other produces mixed signals and underperformance.
+
+**Axis 1 — Partisan Sort:** Does the title politically code the conflict? This can happen at the packaging level even when the targets are apolitical. Examples of titles that triggered sorting:
+- "$80M Plot to Break California" — the word "California" + "plot" coded it as blue-state progressive politics before anyone clicked
+- "Conspiracy To Poison Your Food" — the MAHA/food-safety movement is pre-sorted at the topic level
+
+Examples that avoided sorting:
+- "The Farm Crisis Will Shock You" — farming has no political tripwire
+- "OpenAI Showed Up At My Door" — personal entry point, no partisan signal
+- "Why Vegas Doesn't Care If You Visit Anymore" — universal, apolitical
+
+**Axis 2 — Curiosity Gap:** Does the title open a genuine unknown, or does it confirm what the viewer already believes? A closed curiosity gap suppresses algorithmic reach even when CTR is decent.
+- CLOSED (bad): "Conspiracy To Poison Your Food" — everyone already knows food has chemicals. Confirms prior belief.
+- OPEN (good): "We Uncovered the Illegal Scam Happening at Every Stadium" — nobody knows what the illegal stadium scam is. Opens a question you can't answer without watching.
+
+## The Investigation Frame
+
+For content that involves political figures or politically charged subject matter, use the investigation frame: "Here's something that doesn't add up — come figure it out with me." The viewer is positioned as a detective. The villain is the system or mechanism — not the political figure — which allows a conservative viewer to stay engaged while watching.
+
+Examples that used this successfully:
+- "I Tracked Down The Companies Bribing Trump" (1.3M) — viewer is a detective, villain is the companies
+- "We Investigated The Criminals Who Bought Trump" (1.4M) — investigation frame, promise-betrayal entry point
+
+## The Stress Test
+
+Before finalizing any title, ask: Can a Fox News co-viewer get past this title without hitting a signal that says "this isn't for me"? Trump and political context can be in the story — both Arkansas and OpenAI prove that. But they cannot be the entry point in the title. The entry point must be the people affected or the mechanism being exposed.
+
+## Your Task
+
+Analyze the script below using this framework. Then generate {req.count} genuinely fresh title options. Do NOT simply plug the script's subject into existing templates.
+
+For each title, explicitly evaluate it against both axes and the stress test.
 
 MPU's top-performing titles ranked by {metric_label}:
 {top_titles}
@@ -157,10 +192,10 @@ Scope instruction: {scope_instruction}
 
 For each title:
 1. Write the title
-2. Write 2 sentences explaining the specific strategic insight — what psychological or structural principle it's built on, and why that fits this particular script
+2. Write 2-3 sentences explaining: (a) how it passes Axis 1 (avoids partisan sort), (b) how it passes Axis 2 (opens genuine curiosity gap), and (c) what psychological principle makes it work
 3. Write a 3-5 word strategy tag
 
-Also include a 2-3 sentence "script_analysis" identifying the key emotional and strategic opportunities in this script for titling purposes.
+Also include a "script_analysis" of 3-4 sentences that identifies: the partisan sort risks in this script's subject matter, the genuine unknowns that could form a curiosity gap, and the investigation frame opportunity if one exists.
 
 Respond ONLY as JSON, no markdown, no preamble:
 {{
