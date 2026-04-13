@@ -865,7 +865,7 @@ async function generate() {
 
   } catch(e) {
     statusMsg.className = 'status-msg';
-    showErr('Error: ' + e.message);
+    const msg = e.message || ''; if (msg.includes('overloaded') || msg.includes('503')) {   showErr('Claude is temporarily busy — wait 10–15 seconds and try again.'); } else {   showErr('Something went wrong: ' + msg); }
     console.error(e);
   }
 
