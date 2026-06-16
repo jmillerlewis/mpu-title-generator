@@ -214,7 +214,7 @@ Respond ONLY as JSON, no markdown, no preamble:
                 "content-type": "application/json",
             },
             json={
-                "model": "claude-sonnet-4-20250514",
+                "model": "claude-sonnet-4-6",
                 "max_tokens": 1500,
                 "messages": [{"role": "user", "content": prompt}],
             },
@@ -370,7 +370,7 @@ Respond ONLY as JSON, no markdown, no preamble:
                 "content-type": "application/json",
             },
             json={
-                "model": "claude-sonnet-4-20250514",
+                "model": "claude-sonnet-4-6",
                 "max_tokens": 1500,
                 "messages": [{"role": "user", "content": prompt}],
             },
@@ -413,7 +413,7 @@ async def chat(req: ChatRequest, _: None = Depends(require_auth)):
                 "content-type": "application/json",
             },
             json={
-                "model": "claude-sonnet-4-20250514",
+                "model": "claude-sonnet-4-6",
                 "max_tokens": 1000,
                 "messages": req.messages,
             },
