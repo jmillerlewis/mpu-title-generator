@@ -1,6 +1,8 @@
 import os
 import json
+import re
 import secrets
+import traceback
 import httpx
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -361,37 +363,47 @@ Respond ONLY as JSON, no markdown, no preamble:
   ]
 }}"""
 
-    async with httpx.AsyncClient(timeout=60) as client:
-        response = await client.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": ANTHROPIC_API_KEY,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-            json={
-                "model": "claude-sonnet-4-6",
-                "max_tokens": 1500,
-                "messages": [{"role": "user", "content": prompt}],
-            },
-        )
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            response = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": "claude-sonnet-4-6",
+                    "max_tokens": 1500,
+                    "messages": [{"role": "user", "content": prompt}],
+                },
+            )
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to reach Anthropic API: {str(e)}")
 
     if response.status_code != 200:
+        print(f"Anthropic API error {response.status_code}: {response.text}")
         raise HTTPException(status_code=response.status_code, detail=response.text)
 
-    data = response.json()
-    text = "".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
-    clean = text.replace("```json", "").replace("```", "").strip()
-
     try:
-        parsed = json.loads(clean)
-    except Exception:
-        import re
-        m = re.search(r'\{[\s\S]*\}', clean)
-        if m:
-            parsed = json.loads(m.group())
-        else:
-            raise HTTPException(status_code=500, detail="Could not parse response")
+        data = response.json()
+        text = "".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
+        clean = text.replace("```json", "").replace("```", "").strip()
+        try:
+            parsed = json.loads(clean)
+        except Exception:
+            m = re.search(r'\{[\s\S]*\}', clean)
+            if m:
+                parsed = json.loads(m.group())
+            else:
+                print(f"Could not parse response: {clean[:500]}")
+                raise HTTPException(status_code=500, detail=f"Could not parse Claude response: {clean[:300]}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error processing response: {str(e)}")
 
     return parsed
 
@@ -404,27 +416,36 @@ async def chat(req: ChatRequest, _: None = Depends(require_auth)):
     if not ANTHROPIC_API_KEY:
         raise HTTPException(status_code=500, detail="API key not configured")
 
-    async with httpx.AsyncClient(timeout=60) as client:
-        response = await client.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": ANTHROPIC_API_KEY,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-            json={
-                "model": "claude-sonnet-4-6",
-                "max_tokens": 1000,
-                "messages": req.messages,
-            },
-        )
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            response = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": "claude-sonnet-4-6",
+                    "max_tokens": 1000,
+                    "messages": req.messages,
+                },
+            )
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to reach Anthropic API: {str(e)}")
 
     if response.status_code != 200:
+        print(f"Anthropic chat API error {response.status_code}: {response.text}")
         raise HTTPException(status_code=response.status_code, detail=response.text)
 
-    data = response.json()
-    reply = "".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
-    return {"reply": reply}
+    try:
+        data = response.json()
+        reply = "".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
+        return {"reply": reply}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error processing chat response: {str(e)}")
 
 
 # Serve frontend with auth
