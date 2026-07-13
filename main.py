@@ -176,9 +176,45 @@ Examples that used this successfully:
 
 Before finalizing any title, ask: Can a Fox News co-viewer get past this title without hitting a signal that says "this isn't for me"? Trump and political context can be in the story — both Arkansas and OpenAI prove that. But they cannot be the entry point in the title. The entry point must be the people affected or the mechanism being exposed.
 
+## A/B Test & Performance Data Findings (27 videos tested, Apr–Jul 2026)
+
+These are empirically confirmed rules from MPU's own title A/B tests and real-world performance data. Apply them strictly.
+
+**1. Lead with "We" or "How/Why" — never a question.**
+- "We [verb]..." titles (We Investigated, We Uncovered, We Went To, We Talked To, We Sat X Down With): 25 videos, avg 30,500 views/day
+- "How/Why..." titles: 6 videos, avg 33,400 views/day
+- "I [verb]..." titles: 5 videos, avg 19,500 views/day (highest avg CTR at 5.28%)
+- Question titles: 1 video, 3,112 views/day — the WORST performer in the entire dataset. NEVER use a question as the primary title framing.
+- Pure declarative without a reporting frame: 13,700 views/day average. Avoid.
+
+**2. Name the specific villain — never a generic stand-in.**
+- A/B tests confirmed this twice: Network States explicitly needed "Peter Thiel" to work (generic "tech billionaire" tested weaker). Social Security's final round swapped "Billionaires" for "Elon Musk" and won by a wider margin.
+- Use a person's name, a company's name, or a specific dollar figure. Not "billionaires," "corporations," or "Wall Street" alone.
+
+**3. Specific dollar figures lift performance.**
+- Titles with a specific dollar/million/billion figure: avg 33,800 views/day, 5.46% CTR
+- Titles without: avg 24,600 views/day, 5.05% CTR
+- Where the script contains a specific dollar figure, put it in the title. It's one of the highest-leverage words you can add.
+
+**4. Shock words alone do nothing.**
+- Titles with "scam/secret/hidden/rigged/conspiracy/shock": avg 5.05% CTR
+- Titles without: avg 5.09% CTR — statistically identical.
+- "Will Shock You" as a closer is fine when the "We investigated/uncovered" frame is already doing the work. But never rely on a shock word to do work the rest of the title isn't doing.
+
+**5. The "We [verb]..." pattern that works is active, not passive.**
+- "We Investigated the Most Corrupt World Cup in History" (90,800 views/day) ✓
+- "We Uncovered The Master Plan That Peter Thiel Doesn't Want You To See" (98,963 views/day) ✓
+- "We Investigated How Teams Monetize Your Loyalty: The Results Will Enrage You" (3,684 views/day) ✗ — passive, vague object
+- The verb and its object must be specific and active. "We Investigated [vague thing]" performs no better than a declarative.
+
+**6. First-person singular ("I") works for undercover/access stories.**
+- "I Texted A Loan Shark Back. What I Uncovered Will Shock You." — reporter had personal access
+- "I Tracked Down the Hidden Workers Secretly Powering ChatGPT" — investigative pursuit narrative
+- Use "I" when the story is built around one reporter's specific access or experience. Use "We" for team investigations.
+
 ## Your Task
 
-Analyze the script below using this framework. Then generate {req.count} genuinely fresh title options. Do NOT simply plug the script's subject into existing templates.
+Analyze the script below using this full framework. Then generate {req.count} genuinely fresh title options. Do NOT simply plug the script's subject into existing templates.
 
 For each title, explicitly evaluate it against both axes and the stress test.
 
@@ -193,11 +229,11 @@ Here is the video script:
 Scope instruction: {scope_instruction}
 
 For each title:
-1. Write the title
-2. Write 2-3 sentences explaining: (a) how it passes Axis 1 (avoids partisan sort), (b) how it passes Axis 2 (opens genuine curiosity gap), and (c) what psychological principle makes it work
+1. Write the title — it must lead with "We [verb]", "How/Why", or "I [verb]" (for undercover/access stories). Never start with a question. Never start with a vague declarative.
+2. Write 2-3 sentences explaining: (a) how it passes Axis 1 (avoids partisan sort), (b) how it passes Axis 2 (opens genuine curiosity gap), and (c) which A/B-confirmed rule(s) it applies
 3. Write a 3-5 word strategy tag
 
-Also include a "script_analysis" of 3-4 sentences that identifies: the partisan sort risks in this script's subject matter, the genuine unknowns that could form a curiosity gap, and the investigation frame opportunity if one exists.
+Also include a "script_analysis" of 3-4 sentences covering: the partisan sort risks, the genuine unknowns that open a curiosity gap, the specific villain name/dollar figure the title should use, and whether "We" or "I" framing fits better for this story.
 
 Respond ONLY as JSON, no markdown, no preamble:
 {{
