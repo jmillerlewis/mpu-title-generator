@@ -243,37 +243,49 @@ Respond ONLY as JSON, no markdown, no preamble:
   ]
 }}"""
 
-    async with httpx.AsyncClient(timeout=60) as client:
-        response = await client.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": ANTHROPIC_API_KEY,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-            json={
-                "model": "claude-sonnet-4-6",
-                "max_tokens": 1500,
-                "messages": [{"role": "user", "content": prompt}],
-            },
-        )
+    try:
+        async with httpx.AsyncClient(timeout=90) as client:
+            response = await client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": "claude-sonnet-4-6",
+                    "max_tokens": 2500,
+                    "messages": [{"role": "user", "content": prompt}],
+                },
+            )
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=500, detail="Request timed out — try a shorter script or fewer title suggestions")
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to reach Anthropic API: {str(e)}")
 
     if response.status_code != 200:
+        print(f"Anthropic API error {response.status_code}: {response.text}")
         raise HTTPException(status_code=response.status_code, detail=response.text)
 
-    data = response.json()
-    text = "".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
-    clean = text.replace("```json", "").replace("```", "").strip()
-
     try:
-        parsed = json.loads(clean)
-    except Exception:
-        import re
-        m = re.search(r'\{[\s\S]*\}', clean)
-        if m:
-            parsed = json.loads(m.group())
-        else:
-            raise HTTPException(status_code=500, detail="Could not parse Claude response")
+        data = response.json()
+        text = "".join(b.get("text", "") for b in data.get("content", []) if b.get("type") == "text")
+        clean = text.replace("```json", "").replace("```", "").strip()
+        try:
+            parsed = json.loads(clean)
+        except Exception:
+            m = re.search(r'\{[\s\S]*\}', clean)
+            if m:
+                parsed = json.loads(m.group())
+            else:
+                print(f"Could not parse response. Raw text: {clean[:800]}")
+                raise HTTPException(status_code=500, detail=f"Claude returned an unparseable response. Raw: {clean[:400]}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error processing response: {str(e)}")
 
     return parsed
 
@@ -400,7 +412,7 @@ Respond ONLY as JSON, no markdown, no preamble:
 }}"""
 
     try:
-        async with httpx.AsyncClient(timeout=60) as client:
+        async with httpx.AsyncClient(timeout=90) as client:
             response = await client.post(
                 "https://api.anthropic.com/v1/messages",
                 headers={
@@ -410,10 +422,12 @@ Respond ONLY as JSON, no markdown, no preamble:
                 },
                 json={
                     "model": "claude-sonnet-4-6",
-                    "max_tokens": 1500,
+                    "max_tokens": 2500,
                     "messages": [{"role": "user", "content": prompt}],
                 },
             )
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=500, detail="Request timed out — try a shorter script or fewer title suggestions")
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to reach Anthropic API: {str(e)}")
